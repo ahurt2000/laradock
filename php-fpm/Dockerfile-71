@@ -87,6 +87,38 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 #####################################
+# Oracle InstantClient && OCI8
+#####################################
+#--------------------------------------------------------------------------
+# Oracle Instalclient 12.1: Download and copy rpm's files in oracle folder
+#--------------------------------------------------------------------------
+#  . oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm
+#  . oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
+#
+#   FROM: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
+#
+ARG INSTALL_ORACLE=false
+RUN if [ ${INSTALL_ORACLE} = true ]; then \
+RUN apt-get update -yqq && \
+    apt-get -y install build-essential libaio1 alien
+
+COPY oracle/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm /tmp/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
+COPY oracle/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm /tmp/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm
+RUN alien /tmp/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
+RUN alien /tmp/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm
+
+RUN dpkg -i oracle-instantclient12.1-basic_12.1.0.2.0-2_amd64.deb
+RUN dpkg -i oracle-instantclient12.1-devel_12.1.0.2.0-2_amd64.deb
+
+RUN git clone https://github.com/php/php-src.git php7 --depth 1 \
+    && cd php7/ext/oci8 \
+    && phpize \
+    && ./configure --with-oci8=instantclient,/usr/lib/oracle/12.1/client64/lib \
+    && make \
+    && make install
+fi;
+
+#####################################
 # Blackfire:
 #####################################
 
