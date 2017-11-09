@@ -96,27 +96,26 @@ COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 #  . oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
 #
 #   FROM: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
-#
+######################################
 ARG INSTALL_ORACLE=false
+COPY oracle/oracle-* /tmp/
 RUN if [ ${INSTALL_ORACLE} = true ]; then \
-RUN apt-get update -yqq && \
+    apt-get update -yqq && \
     apt-get -y install build-essential libaio1 alien
+;fi
 
-COPY oracle/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm /tmp/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
-COPY oracle/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm /tmp/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm
-RUN alien /tmp/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm
-RUN alien /tmp/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm
-
-RUN dpkg -i oracle-instantclient12.1-basic_12.1.0.2.0-2_amd64.deb
-RUN dpkg -i oracle-instantclient12.1-devel_12.1.0.2.0-2_amd64.deb
-
-RUN git clone https://github.com/php/php-src.git php7 --depth 1 \
+RUN if [ ${INSTALL_ORACLE} = true ]; then \
+    alien /tmp/oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm \
+    alien /tmp/oracle-instantclient12.1-devel-12.1.0.2.0-1.x86_64.rpm \
+    dpkg -i oracle-instantclient12.1-basic_12.1.0.2.0-2_amd64.deb \
+    dpkg -i oracle-instantclient12.1-devel_12.1.0.2.0-2_amd64.deb \
+    git clone https://github.com/php/php-src.git php7 --depth 1 \
     && cd php7/ext/oci8 \
     && phpize \
     && ./configure --with-oci8=instantclient,/usr/lib/oracle/12.1/client64/lib \
     && make \
     && make install
-fi;
+;fi
 
 #####################################
 # Blackfire:
@@ -371,7 +370,7 @@ ARG INSTALL_IMAGEMAGICK=false
 ENV INSTALL_IMAGEMAGICK ${INSTALL_IMAGEMAGICK}
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     apt-get update -y && \
-    apt-get install -y libmagickwand-dev imagemagick && \ 
+    apt-get install -y libmagickwand-dev imagemagick && \
     pecl install imagick && \
     docker-php-ext-enable imagick \
 ;fi
