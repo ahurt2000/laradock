@@ -99,9 +99,10 @@ COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 ######################################
 ARG INSTALL_ORACLE=false
 COPY oracle/oracle-* /tmp/
+
 RUN if [ ${INSTALL_ORACLE} = true ]; then \
     apt-get update -yqq && \
-    apt-get -y install build-essential libaio1 alien
+    apt-get -y install build-essential libaio1 alien \
 ;fi
 
 RUN if [ ${INSTALL_ORACLE} = true ]; then \
@@ -114,7 +115,7 @@ RUN if [ ${INSTALL_ORACLE} = true ]; then \
     && phpize \
     && ./configure --with-oci8=instantclient,/usr/lib/oracle/12.1/client64/lib \
     && make \
-    && make install
+    && make install \
 ;fi
 
 #####################################
